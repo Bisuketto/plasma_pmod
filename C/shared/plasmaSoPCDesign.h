@@ -15,8 +15,8 @@
 
 
 /*********** Interrupt bits **************/
-#define UART_READ_AVAILABLE  0x01
-#define UART_WRITE_AVAILABLE 0x02
+#define IRQ_UART_READ_AVAILABLE  0x01
+#define IRQ_UART_WRITE_AVAILABLE 0x02
 #define IRQ_COUNTER18_NOT        0x04
 #define IRQ_COUNTER18            0x08
 #define IRQ_ETHERNET_RECEIVE     0x10
