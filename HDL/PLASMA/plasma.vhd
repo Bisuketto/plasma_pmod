@@ -502,7 +502,6 @@ architecture logic of plasma is
 	end component;
 	
 	component uart_pmod is
-	   generic(log_file : string := "UNUSED");
 	   port(clk          : in  std_logic;
 			reset        : in  std_logic;
 			enable_read  : in  std_logic;
@@ -793,6 +792,7 @@ begin  --architecture
       end case;
 
       if reset = '1' then
+		 uart_pmod_mask <= ZERO(1 downto 0);
          irq_mask_reg <= ZERO(7 downto 0);
          gpio0_reg    <= ZERO;
          counter_reg  <= ZERO;
@@ -907,7 +907,6 @@ begin  --architecture
 	--
    uart_pmod_gen: if eUartPmod = '1' generate
 	   u3_uart_pmod: uart_pmod
-      generic map (log_file => log_file)
       port map(
          clk          => clk,
          reset        => reset,

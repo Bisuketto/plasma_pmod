@@ -239,14 +239,16 @@ PLASMA_SOC_GENERICS =
 
 ifeq ($(CONFIG_UART),yes)
 PLASMA_SOC_GENERICS += eUart=1'b1
-PLASMA_SOC_FILES += uart.vhd
+PLASMA_SOC_FILES += uart.vhd 
 else
 PLASMA_SOC_GENERICS += eUart=1'b0
 endif
 
 ifeq ($(CONFIG_UART_PMOD),yes)          #UART_PMOD MODIF HERE
 PLASMA_SOC_GENERICS += eUartPmod=1'b1
-PLASMA_SOC_FILES += uart_pmod.vhd
+PLASMA_SOC_FILES += uart_pmod.vhd 
+PLASMA_SOC_FILES += uart_recv.vhd 
+PLASMA_SOC_FILES += uart_send.vhd
 else
 PLASMA_SOC_GENERICS += eUartPmod=1'b0
 endif
