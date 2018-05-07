@@ -77,6 +77,15 @@ BUILD_DIRS += $(OBJ)/projet_e2
 BUILD_BINS += $(BIN)/projet_e2.bin
 PROJECTS += $(PROJET_E2)
 
+ASCII_MODULE = $(BIN)/ascii_module.bin
+ASCII_MODULE_HDL = $(BIN)/ascii_module.txt
+ASCII_MODULE_FILES = main.c ASCIInterface.c
+ASCII_MODULE_SOURCES = $(addprefix $(C)/ascii_module/Sources/,$(ASCII_MODULE_FILES))
+ASCII_MODULE_OBJECTS = $(addprefix $(OBJ)/ascii_module/,$(ASCII_MODULE_FILES:.c=.o))
+BUILD_DIRS += $(OBJ)/ascii_module
+BUILD_BINS += $(BIN)/ascii_module.bin
+PROJECTS += $(ASCII_MODULE)
+
 GPS = $(BIN)/gps.bin
 GPS_HDL = $(BIN)/gps.txt
 GPS_FILES = main.c
@@ -233,6 +242,9 @@ PROJECT_HDL = $(I2C_HDL)
 else ifeq ($(CONFIG_PROJECT), gps)
 PROJECT = $(GPS)
 PROJECT_HDL = $(GPS_HDL)
+else ifeq ($(CONFIG_PROJECT), ascii_module)
+PROJECT = $(ASCII_MODULE)
+PROJECT_HDL = $(ASCII_MODULE_HDL)
 endif
 
 PLASMA_SOC_GENERICS =
@@ -493,6 +505,22 @@ $(GPS_HDL): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(GPS_OBJECTS) $(CONVERT_BIN
 
 .PHONY: gps
 gps: $(GPS) $(GPS_HDL)
+
+$(ASCII_MODULE_OBJECTS): $(OBJ)/ascii_module/%.o: $(C)/ascii_module/Sources/%.c | $(BUILD_DIRS)
+	$(CC_MIPS) $(CFLAGS_MIPS) -o $@ $<
+
+$(ASCII_MODULE): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(ASCII_MODULE_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
+	$(LD_MIPS) -Ttext $(ENTRY_LOAD) -eentry -Map $(OBJ)/ascii_module/ascii_module.map -s -N -o $(OBJ)/ascii_module/ascii_module.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(ASCII_MODULE_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/ascii_module/ascii_module.axf $(OBJ)/ascii_module/ascii_module.bin $(OBJ)/ascii_module/ascii_module.txt
+	cp $(OBJ)/ascii_module/ascii_module.bin $@
+
+$(ASCII_MODULE_HDL): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(ASCII_MODULE_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
+	$(LD_MIPS) -Ttext $(ENTRY_HDL) -eentry -Map $(OBJ)/ascii_module/ascii_module.map -s -N -o $(OBJ)/ascii_module/ascii_module_hdl.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(ASCII_MODULE_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/ascii_module/ascii_module_hdl.axf $(OBJ)/ascii_module/ascii_module_hdl.bin $(OBJ)/ascii_module/ascii_module_hdl.txt
+	cp $(OBJ)/ascii_module/ascii_module_hdl.txt $@
+
+.PHONY: ascii_module
+ascii_module: $(ASCII_MODULE) $(ASCII_MODULE_HDL)
 
 
 .PHONY: project
