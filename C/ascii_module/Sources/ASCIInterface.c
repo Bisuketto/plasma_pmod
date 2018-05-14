@@ -19,7 +19,7 @@ void initDisplay(void)
         send.bit_w = 0;
         send.pixelDepth_L = 0;
         send.pixelDepth_H = 0;
-        send.displayOff = 0;
+        send.displayOff = 1;
 
         MemoryWrite(RST_ASCII_MODULE, 1);
 }
@@ -31,13 +31,13 @@ int getDisplayInformation(void)
 
 void startDisplay(void)
 {
-    send.displayOff = 1;
+    send.displayOff = 0;
     sendData();
 }
 
 void stopDisplay(void)
 {
-    send.displayOff = 0;
+    send.displayOff = 1;
     sendData();
 }
 
