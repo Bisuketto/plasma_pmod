@@ -8,7 +8,7 @@ void sendData(void)
         (send.displayOff << 30) | (send.pixelDepth_H << 28) |
         (send.pixelDepth_L << 26) | (send.bit_w << 25) |
         (send.cont_w << 24) | (send.addr << 9) |
-        (send.data_in << 1));
+        send.data_in);
 }
 
 void initDisplay(void)
