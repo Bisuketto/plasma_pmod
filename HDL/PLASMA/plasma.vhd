@@ -66,6 +66,9 @@
 --   0x40000200  Seven segment display input
 --   0x40000204  Seven segment display reset
 
+--   0x40000600  Ascii vga display input
+--   0x40000604  Ascii vga display reset
+
 --   0x80000000  DMA ENGINE (NOT WORKING YET)
 ---------------------------------------------------------------------
 library ieee;
@@ -81,6 +84,7 @@ entity plasma is
            eUart       : std_logic; 
            
            eUartPmod   : std_logic; --UART_PMOD MODIF HERE
+           eAsciiVga   : std_logic; 
            
            eButtons    : std_logic;
            eRGBOLED    : std_logic;
@@ -326,6 +330,12 @@ architecture logic of plasma is
    signal uart_pmod_status  : std_logic_vector(1 downto 0);
    signal uart_pmod_mask	: std_logic_vector(1 downto 0);
    signal uart_pmod_flag	: std_logic;
+   
+   signal ascii_vga_enable : std_logic;                                 --ASCII_VGA
+   signal ascii_vga_read : std_logic;
+   signal ascii_vga_write : std_logic;
+   signal ascii_vga_reset : std_logic;
+   signal ascii_vga_data_out : std_logic_vector(31 downto 0);
 	
 	COMPONENT memory_64k
     Port ( clk       : in   STD_LOGIC;
@@ -351,6 +361,23 @@ architecture logic of plasma is
          VGA_green       : out std_logic_vector(3 downto 0);   -- green output
          VGA_blue        : out std_logic_vector(3 downto 0)   -- blue output
       );
+   end component;
+   
+   component ascii_vga_ctrl is
+       port(
+          clock           : in  std_logic;
+          clock_vga       : in  std_logic;
+          reset           : in  std_logic;
+          vga_w           : in  std_logic_vector(31 downto 0);
+          vga_w_en        : in  std_logic;
+          vga_r           : out std_logic_vector(31 downto 0);
+          vga_r_en        : in std_logic;
+          VGA_hs          : out std_logic;   -- horizontal vga syncr.
+          VGA_vs          : out std_logic;   -- vertical vga syncr.
+          VGA_red         : out std_logic_vector(3 downto 0);   -- red output
+          VGA_green       : out std_logic_vector(3 downto 0);   -- green output
+          VGA_blue        : out std_logic_vector(3 downto 0)   -- blue output
+       );
    end component;
 
 	component ctrl_SL is
@@ -611,6 +638,11 @@ begin  --architecture
    enable_uart_pmod_read        <= enable_uart_pmod and not write_enable;	--UART_PMOD MODIF HERE (signal link)
    enable_uart_pmod_write       <= enable_uart_pmod and write_enable;
    
+   ascii_vga_reset <= '1' when (cpu_address = x"40000604") else '0';
+   ascii_vga_enable <= '1' when (cpu_address = x"40000600") else '0';  -- ASCII_VGA
+   ascii_vga_read <= ascii_vga_enable and not write_enable;
+   ascii_vga_write <= ascii_vga_enable and write_enable;
+   
 --   assert cop_4_valid /= '1' severity failure;
 	--
 	-- ON LIT/ECRIT DANS LA MEMOIRE LOCALE UNIQUEMENT LORSQUE LE BUS
@@ -707,7 +739,7 @@ begin  --architecture
       fifo_1_empty, fifo_2_empty, fifo_1_full, fifo_2_full,
       fifo_1_valid, fifo_2_valid, fifo_1_compteur, fifo_2_compteur, fifo_1_out_data,
       oledsigplot_output, oledterminal_output, oledcharmap_output, olednibblemap_output,
-      oledbitmap_output, ctrl_SL_output, data_read_uart_pmod, uart_pmod_status, uart_pmod_mask) --UART_PMOD MODIF HERE
+      oledbitmap_output, ctrl_SL_output, data_read_uart_pmod, uart_pmod_status, uart_pmod_mask, ascii_vga_data_out) --UART_PMOD MODIF HERE
    begin
       case cpu_address(30 downto 28) is
 
@@ -781,6 +813,7 @@ begin  --architecture
 		    when x"40000500" => cpu_data_r <= ZERO(31 downto 8) & data_read_uart_pmod; --UART_PMOD MODIF HERE
 		    when x"40000510" => cpu_data_r <= ZERO(31 downto 2) & uart_pmod_mask;
 			when x"40000520" => cpu_data_r <= ZERO(31 downto 2) & uart_pmod_status;
+			when x"40000600" => cpu_data_r <= ascii_vga_data_out;                      --ASCII_VGA
                                       
 			when others => cpu_data_r <= x"FFFFFFFF";
 		end case;
@@ -1074,6 +1107,33 @@ begin  --architecture
 --		VGA_green => VGA_green,
 --		VGA_blue => VGA_blue
 --	);
+
+   ascii_vga_ctrl_gen: if eAsciiVga = '1' generate
+	   u3_ascii_vga_ctrl: ascii_vga_ctrl
+      port map(
+        clock          => clk,
+        clock_VGA      => clk_VGA,
+        reset          => reset, --ascii_vga_reset,
+        vga_w         => cpu_data_w,
+        vga_w_en  => ascii_vga_write,
+        vga_r       => ascii_vga_data_out,
+        vga_r_en => ascii_vga_read,
+        VGA_hs => VGA_hs,
+        VGA_vs => VGA_vs,
+        VGA_red => VGA_red,
+        VGA_green => VGA_green,
+        VGA_blue => VGA_blue
+        );
+   end generate;
+
+   ascii_vga_ctrl_gen2: if eAsciiVga = '0' generate
+         ascii_vga_data_out  <= (others => '0');
+         VGA_hs     <= '0';
+         VGA_vs     <= '0';
+         VGA_red    <= (others => '0');
+         VGA_green  <= (others => '0');
+         VGA_blue   <= (others => '0');
+   end generate;
 
 	--
 	-- ETHERNET CONTROLLER CAN BE REMOVED (FOR ASIC DESIGN)

@@ -19,7 +19,8 @@ use unisim.VComponents.all;
 entity top_plasma is
    generic(ethernet    : std_logic  := '0';
            eUart       : std_logic  := '1';          
-           eUartPmod   : std_logic 	:= '1'; --UART_PMOD MODIF HERE          
+           eUartPmod   : std_logic 	:= '1'; --UART_PMOD MODIF HERE
+           eAsciiVga   : std_logic  := '1';       
            eButtons    : std_logic  := '1';
            eRGBOLED    : std_logic  := '1';
            eSwitchLED  : std_logic  := '1';
@@ -128,6 +129,7 @@ end process;
 		ethernet    => ethernet,
 		eUart       => eUart,
 		eUartPmod	=> eUartPmod,
+		eAsciiVga   => eAsciiVga,
 		eButtons    => eButtons,
 		eRGBOLED    => eRGBOLED,
 		eSwitchLED  => eSwitchLED,
